@@ -17,9 +17,9 @@
 
 
        
-4. **Çıkış Yap** `POST /auth/logout`
+4. **Çıkış Yap** 
 
-     - **API METODU:** POST /auth/reset-password
+     - **API METODU:** `POST /auth/logout`
      - **Açıklama:** Sistem, giriş yapmış kullanıcıların hesaplarından güvenli bir şekilde çıkış yapabilmesini sağlamalıdır. Çıkış işlemi sonrasında kullanıcı hesabına erişim sonlandırılmalıdır. Kullanıcı tekrar işlem yapmak isterse yeniden giriş yapmalıdır.
   
 
