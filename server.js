@@ -7,10 +7,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. VERİTABANI BAĞLANTISI (Not ettiğin linki buraya yapıştıracaksın)
-mongoose.connect('mongodb+srv://MyLibrary:0Mopesy0@cluster0.ufttfij.mongodb.net/?appName=Cluster0')
-    .then(() => console.log("Veritabanına bağlanıldı!"))
-    .catch(err => console.log("Bağlantı hatası:", err));
+// MongoDB Bağlantı Fonksiyonu
+const connectDB = async () => {
+    try {
+        // Eğer zaten bağlıysa tekrar bağlanmaya çalışıp sistemi yorma
+        if (mongoose.connection.readyState === 1) return; 
+        
+        // KENDİ MONGODB LİNKİNİ BURAYA YAPIŞTIR
+        await mongoose.connect('mongodb+srv://MyLibrary:0Mopesy0@cluster0.ufttfij.mongodb.net/?appName=Cluster0'); 
+        console.log("MongoDB'ye başarıyla bağlanıldı!");
+    } catch (error) {
+        console.error("Bağlantı hatası:", error);
+    }
+};
+
+// Her istek geldiğinde önce veritabanı kapısının açık olduğundan emin ol
+app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+});
 
 // 2. MODELLER (Şemalar)
 const UserSchema = new mongoose.Schema({
