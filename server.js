@@ -44,12 +44,73 @@ app.post('/books', async (req, res) => {
     res.json(yeniKitap);
 });
 
-// Filtreleme ve Listeleme (GET /books)
+// --- YENİ EKLENEN 7 GEREKSİNİM ---
+
+// 1. Giriş Yap (POST /auth/login)
+app.post('/auth/login', async (req, res) => {
+    const { eposta, sifre } = req.body;
+    const user = await User.findOne({ eposta, sifre });
+    if (user) {
+        res.json({ mesaj: "Giriş başarılı!", kullanici: user.ad });
+    } else {
+        res.status(400).json({ hata: "E-posta veya şifre hatalı." });
+    }
+});
+
+// 2. Şifremi Unuttum (POST /auth/forgot-password)
+app.post('/auth/forgot-password', async (req, res) => {
+    const { eposta, yeniSifre } = req.body;
+    const user = await User.findOneAndUpdate({ eposta }, { sifre: yeniSifre }, { new: true });
+    if (user) {
+        res.json({ mesaj: "Şifreniz başarıyla güncellendi." });
+    } else {
+        res.status(404).json({ hata: "Kullanıcı bulunamadı." });
+    }
+});
+
+// 3. Çıkış Yap (POST /auth/logout)
+app.post('/auth/logout', (req, res) => {
+    // Çıkış işlemi genelde arayüzden (frontend) silinerek yapılır, API sadece onay döner.
+    res.json({ mesaj: "Çıkış başarılı. Oturum sonlandırıldı." });
+});
+
+// 4. Puan Ver (POST /books/:bookId/ratings)
+app.post('/books/:bookId/ratings', async (req, res) => {
+    const { puan } = req.body;
+    const kitap = await Book.findByIdAndUpdate(req.params.bookId, { puan: puan }, { new: true });
+    res.json({ mesaj: "Puan başarıyla eklendi", kitap });
+});
+
+// 5. Kitaba Yorum Ekle (POST /books/:bookId/comments)
+app.post('/books/:bookId/comments', async (req, res) => {
+    const { kullanici, metin } = req.body;
+    const kitap = await Book.findById(req.params.bookId);
+    kitap.yorumlar.push({ kullanici, metin });
+    await kitap.save();
+    res.json({ mesaj: "Yorum başarıyla eklendi", kitap });
+});
+
+// 6. Okuma Durumu Güncelle (PUT /books/:bookId/reading-status)
+app.put('/books/:bookId/reading-status', async (req, res) => {
+    const { durum } = req.body; 
+    const kitap = await Book.findByIdAndUpdate(req.params.bookId, { okumaDurumu: durum }, { new: true });
+    res.json({ mesaj: "Okuma durumu güncellendi", kitap });
+});
+
+// 7. Kitap Bilgilerini Düzenle (PUT /books/:bookId)
+app.put('/books/:bookId', async (req, res) => {
+    const kitap = await Book.findByIdAndUpdate(req.params.bookId, req.body, { new: true });
+    res.json({ mesaj: "Kitap bilgileri başarıyla güncellendi", kitap });
+});
+
+// --- GÜNCELLENMİŞ FİLTRELEME VE LİSTELEME KODU ---
+// Eski app.get('/books') kodunu silip bunu yapıştırabilirsin.
 app.get('/books', async (req, res) => {
-    const { genre, minRating, sortBy, order } = req.query;
+    const { genre, minRating, readingStatus, sortBy, order } = req.query;
     let query = {};
     if (genre) query.kategori = genre;
     if (minRating) query.puan = { $gte: Number(minRating) };
+    if (readingStatus) query.okumaDurumu = readingStatus;
 
     let books = await Book.find(query).sort({ [sortBy || 'kitapAdi']: order === 'desc' ? -1 : 1 });
     res.json(books);
